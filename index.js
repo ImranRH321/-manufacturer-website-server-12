@@ -26,9 +26,7 @@ async function run() {
       .db("Car_ware_Tools")
       .collection("services");
 
-    const orderCollection = client
-      .db("Car_ware_Tools")
-      .collection("orders");
+    const orderCollection = client.db("Car_ware_Tools").collection("orders");
 
     //   _________Services_Collection_________
     app.get("/service", async (req, res) => {
@@ -46,17 +44,25 @@ async function run() {
 
     //   _________Orders_Collection_POST_________
     app.post("/order", async (req, res) => {
-     const result = await orderCollection.insertOne(req.body)
-     res.send(result) 
+      const result = await orderCollection.insertOne(req.body);
+      res.send(result);
     });
     //   _________Orders_Collection_GET_________
     app.get("/order", async (req, res) => {
-      const email = req.query.email 
-     const result = await orderCollection.find({userEmail: email}).toArray()
-     res.send(result) 
+      const email = req.query.email;
+      const result = await orderCollection.find({ userEmail: email }).toArray();
+      res.send(result);
+    });
+
+    //   _________Orders_Collection_Deleted_id_________
+    app.delete("/order/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await orderCollection.deleteOne({ _id: ObjectId(id) });
+      res.send(result);
     });
 
 
+    
   } finally {
     // await client.close();
   }
