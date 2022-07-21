@@ -25,8 +25,8 @@ async function run() {
     const serviceCollection = client
       .db("Car_ware_Tools")
       .collection("services");
-
     const orderCollection = client.db("Car_ware_Tools").collection("orders");
+    const userCollection = client.db("Car_ware_Tools").collection("users");
 
     //   _________Services_Collection_________
     app.get("/service", async (req, res) => {
@@ -61,8 +61,21 @@ async function run() {
       res.send(result);
     });
 
+    //  ____userCollection___Put__
+    app.put("/user", async (req, res) => {
+      const email = req.query.email;
+      const user = req.body;
+      const filter = { email: email };
+      console.log(filter, user);
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
 
-    
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      console.log(result);
+      res.send(result);
+    });
   } finally {
     // await client.close();
   }
