@@ -71,11 +71,19 @@ async function run() {
       const updateDoc = {
         $set: user,
       };
-
       const result = await userCollection.updateOne(filter, updateDoc, options);
       console.log(result);
       res.send(result);
     });
+
+    //  ____MyProfile__
+    app.post("/myProfile", async (req, res) => {
+      const result = await orderCollection.insertOne(req.body);
+      console.log(result);
+      res.send(result);
+    });
+
+
   } finally {
     // await client.close();
   }
