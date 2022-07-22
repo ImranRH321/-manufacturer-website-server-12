@@ -7,7 +7,6 @@ const ObjectId = require("mongodb").ObjectId;
 const port = process.env.PORT || 5000;
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
-
 //___MiddleWare___\\
 app.use(cors());
 app.use(express.json());
@@ -29,6 +28,9 @@ async function run() {
       .collection("services");
     const orderCollection = client.db("Car_ware_Tools").collection("orders");
     const userCollection = client.db("Car_ware_Tools").collection("users");
+    const paymentCollection = client
+      .db("Car_ware_Tools")
+      .collection("payments");
 
     //   _________Services_Collection_________
     app.get("/service", async (req, res) => {
@@ -85,28 +87,44 @@ async function run() {
       res.send(result);
     });
 
-   //   _________Orders_id_________
-   app.get("/order/:id", async (req, res) => {
-    const id = req.params.id;
-    const result = await orderCollection.findOne({ _id: ObjectId(id) });
-    res.send(result);
-  });
-
-  // _____________Payment__________
-  app.post("/create-payment-intent", async (req, res) => {
-    const { price } = req.body;
-   const amount = price * 100; 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount,
-      currency: "usd",
-      payment_method_types:['card']
+    //   _________Orders_id_________
+    app.get("/order/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await orderCollection.findOne({ _id: ObjectId(id) });
+      res.send(result);
     });
-  
-    res.send({
-      clientSecret: paymentIntent.client_secret,
-    });
-  });
 
+    // _____________Payment__________
+    app.post("/create-payment-intent", async (req, res) => {
+      const service = req.body;
+      const price = service.price;
+      const amount = price * 100;
+      console.log(price);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    // _________________patch_______________
+    app.patch("/payment/:id", async (req, res) => {
+      const id = req.params.id;
+      const payment = req.body;
+      const filter = { _id: ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          paid: true,
+          transactionId: payment.transactionId,
+        },
+      };
+      const result = await paymentCollection.insertOne(payment);
+      const updatedBooking = await orderCollection.updateOne(filter, updateDoc);
+      res.send(updateDoc);
+    });
   } finally {
     // await client.close();
   }
