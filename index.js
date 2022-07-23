@@ -31,6 +31,9 @@ async function run() {
     const paymentCollection = client
       .db("Car_ware_Tools")
       .collection("payments");
+    const myProfileCollection = client
+      .db("Car_ware_Tools")
+      .collection("myProfile");
 
     //   _________Services_Collection_________
     app.get("/service", async (req, res) => {
@@ -49,6 +52,13 @@ async function run() {
       const result = await serviceCollection
         .find({ _id: ObjectId(id) })
         .toArray();
+      res.send(result);
+    });
+
+    // _______user_Get________
+    app.get("/user", async (req, res) => {
+      const result = await userCollection.find({}).toArray();
+      console.log("res", result);
       res.send(result);
     });
 
@@ -76,20 +86,33 @@ async function run() {
       const email = req.query.email;
       const user = req.body;
       const filter = { email: email };
-      console.log(filter, user);
       const options = { upsert: true };
       const updateDoc = {
         $set: user,
       };
       const result = await userCollection.updateOne(filter, updateDoc, options);
-      console.log(result);
       res.send(result);
     });
 
-    //  ____MyProfile__
-    app.post("/myProfile", async (req, res) => {
-      const result = await orderCollection.insertOne(req.body);
-      console.log(result);
+    // -------------------UpdateProfile____________
+    app.put("/myProfile", async (req, res) => {
+      const email = req.query.email;
+      const user = req.body;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await myProfileCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+    //  __myProfileGet__
+    app.get("/myProfile", async (req, res) => {
+      const result = await myProfileCollection.find().toArray();
       res.send(result);
     });
 
