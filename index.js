@@ -2,6 +2,7 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
 const app = express();
 const ObjectId = require("mongodb").ObjectId;
 const port = process.env.PORT || 5000;
@@ -34,16 +35,11 @@ async function run() {
     const myProfileCollection = client
       .db("Car_ware_Tools")
       .collection("myProfile");
+    const ratingCollection = client.db("Car_ware_Tools").collection("rating");
 
     //   _________Services_Collection_________
     app.get("/service", async (req, res) => {
       const result = await serviceCollection.find().toArray();
-      res.send(result);
-    });
-
-    //   _________serviceCollection_POST_________
-    app.post("/service", async (req, res) => {
-      const result = await serviceCollection.insertOne(req.body);
       res.send(result);
     });
 
@@ -58,6 +54,20 @@ async function run() {
     // _______user_Get________
     app.get("/user", async (req, res) => {
       const result = await userCollection.find({}).toArray();
+      console.log("res", result);
+      res.send(result);
+    });
+
+    //   _________Ratting________
+    app.post("/rating", async (req, res) => {
+      console.log(req.body);
+      const result = await ratingCollection.insertOne(req.body);
+      res.send(result);
+    });
+
+    // _______Ratting_Get________
+    app.get("/rating", async (req, res) => {
+      const result = await ratingCollection.find({}).toArray();
       console.log("res", result);
       res.send(result);
     });
@@ -91,13 +101,19 @@ async function run() {
         $set: user,
       };
       const result = await userCollection.updateOne(filter, updateDoc, options);
-      res.send(result);
+      /* token generate */
+      const token = jwt.sign(
+        { email: email },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: "12h" }
+      );
+      console.log("tok", token);
+      res.send({ result, token });
     });
 
     // __________make_admin________
     app.put("/user/admin/:id", async (req, res) => {
       const email = req.params.id;
-      console.log(email);
       const filter = { email: email };
       const updateDoc = {
         $set: {
@@ -105,6 +121,7 @@ async function run() {
         },
       };
       const result = await userCollection.updateOne(filter, updateDoc);
+
       res.send(result);
     });
 
