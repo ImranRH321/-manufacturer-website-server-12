@@ -95,8 +95,6 @@ async function run() {
     app.get("/order", jwtVaryFy, async (req, res) => {
       const email = req.query.email;
       const decodedEmail = req.decoded.email;
-      // console.log('deco', decodedEmail);
-      // console.log('email', email);
       if (decodedEmail === email) {
         const result = await orderCollection
           .find({ userEmail: email })
@@ -111,6 +109,12 @@ async function run() {
     app.delete("/order/:id", async (req, res) => {
       const id = req.params.id;
       const result = await orderCollection.deleteOne({ _id: ObjectId(id) });
+      res.send(result);
+    });
+
+    // _____________Manage _Product_all___________
+    app.get("/manage", async (req, res) => {
+      const result = await orderCollection.find().toArray();
       res.send(result);
     });
 
@@ -144,8 +148,8 @@ async function run() {
     //  ___________admin_Deleted_user________
     app.delete("/admin/:email", async (req, res) => {
       const email = req.params.email;
-      const result = await userCollection.deleteOne({email: email});
-      console.log('result', result);
+      const result = await userCollection.deleteOne({ email: email });
+      console.log("result", result);
       res.send(result);
     });
 
@@ -189,7 +193,7 @@ async function run() {
     //  __myProfileGet__
     app.get("/myProfile/:email", async (req, res) => {
       const email = req.params.email;
-      const result = await myProfileCollection.findOne({email:email})
+      const result = await myProfileCollection.findOne({ email: email });
       res.send(result);
     });
 
