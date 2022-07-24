@@ -23,7 +23,7 @@ const client = new MongoClient(uri, {
 // ============================Jwt================================
 const jwtVaryFy = (req, res, next) => {
   const autHeader = req.headers.authorization;
-  console.log("authHeader--->", autHeader);
+  // console.log("authHeader--->", autHeader);
   if (!autHeader) {
     return res.status(403).send({ messages: "unAuthorization access" });
   }
@@ -130,7 +130,6 @@ async function run() {
         process.env.ACCESS_TOKEN_SECRET,
         { expiresIn: "12h" }
       );
-      console.log(token);
       res.send({ result, token });
     });
 
@@ -138,9 +137,16 @@ async function run() {
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
       const user = await userCollection.findOne({ email: email });
-      console.log('user ad', user);
       const isAdmin = user.role === "admin";
       res.send({ admin: isAdmin });
+    });
+
+    //  ___________admin_Deleted_user________
+    app.delete("/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await userCollection.deleteOne({email: email});
+      console.log('result', result);
+      res.send(result);
     });
 
     // __________make_admin________
@@ -181,8 +187,9 @@ async function run() {
       res.send(result);
     });
     //  __myProfileGet__
-    app.get("/myProfile", async (req, res) => {
-      const result = await myProfileCollection.find().toArray();
+    app.get("/myProfile/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await myProfileCollection.findOne({email:email})
       res.send(result);
     });
 
