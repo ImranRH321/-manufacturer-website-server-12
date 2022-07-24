@@ -81,7 +81,7 @@ async function run() {
     });
 
     // _______Ratting_Get________
-    app.get("/rating", jwtVaryFy, async (req, res) => {
+    app.get("/rating",  async (req, res) => {
       const result = await ratingCollection.find({}).toArray();
       res.send(result);
     });
@@ -113,8 +113,23 @@ async function run() {
     });
 
     // __________________addProduct________________
-    app.post("/addProduct", async (req, res) => {
+    app.post("/addProduct", jwtVaryFy, async (req, res) => {
       const result = await serviceCollection.insertOne(req.body);
+      res.send(result);
+    });
+   
+        // _____________AllProduct___________
+        app.get("/allProducts", jwtVaryFy, async (req, res) => {
+          const result = await serviceCollection.find().toArray();
+          res.send(result);
+        });
+      
+            //   _________AllProduct_Deleted_id_________
+    app.delete("/allProduct/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log('id', id);
+      const result = await serviceCollection.deleteOne({ _id: ObjectId(id) });
+      console.log('res', result);
       res.send(result);
     });
 
