@@ -20,6 +20,23 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+// ============================Jwt================================
+const jwtVaryFy = (req, res, next) => {
+  const autHeader = req.headers.authorization;
+  console.log("authHeader--->", autHeader);
+  if (!autHeader) {
+    return res.status(403).send({ messages: "unAuthorization access" });
+  }
+  const token = autHeader.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+    if (err) {
+      return res.status(401).send({ messages: "forbidden access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
+
 /* -------------------------------------------------------------------------- */
 async function run() {
   try {
@@ -52,15 +69,13 @@ async function run() {
     });
 
     // _______user_Get________
-    app.get("/user", async (req, res) => {
+    app.get("/user", jwtVaryFy, async (req, res) => {
       const result = await userCollection.find({}).toArray();
-      console.log("res", result);
       res.send(result);
     });
 
     //   _________Ratting________
     app.post("/rating", async (req, res) => {
-      console.log(req.body);
       const result = await ratingCollection.insertOne(req.body);
       res.send(result);
     });
@@ -68,7 +83,6 @@ async function run() {
     // _______Ratting_Get________
     app.get("/rating", async (req, res) => {
       const result = await ratingCollection.find({}).toArray();
-      console.log("res", result);
       res.send(result);
     });
 
@@ -78,10 +92,19 @@ async function run() {
       res.send(result);
     });
     //   _________Orders_Collection_GET_________
-    app.get("/order", async (req, res) => {
+    app.get("/order", jwtVaryFy, async (req, res) => {
       const email = req.query.email;
-      const result = await orderCollection.find({ userEmail: email }).toArray();
-      res.send(result);
+      const decodedEmail = req.decoded.email;
+      // console.log('deco', decodedEmail);
+      // console.log('email', email);
+      if (decodedEmail === email) {
+        const result = await orderCollection
+          .find({ userEmail: email })
+          .toArray();
+        return res.send(result);
+      } else {
+        return res.status(401).send({ messages: "forbidden access" });
+      }
     });
 
     //   _________Orders_Collection_Deleted_id_________
@@ -107,22 +130,38 @@ async function run() {
         process.env.ACCESS_TOKEN_SECRET,
         { expiresIn: "12h" }
       );
-      console.log("tok", token);
+      console.log(token);
       res.send({ result, token });
     });
 
-    // __________make_admin________
-    app.put("/user/admin/:id", async (req, res) => {
-      const email = req.params.id;
-      const filter = { email: email };
-      const updateDoc = {
-        $set: {
-          role: "admin",
-        },
-      };
-      const result = await userCollection.updateOne(filter, updateDoc);
+    // _____admin_email____
+    app.get("/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = await userCollection.findOne({ email: email });
+      console.log('user ad', user);
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
+    });
 
-      res.send(result);
+    // __________make_admin________
+    app.put("/user/admin/:id", jwtVaryFy, async (req, res) => {
+      const email = req.params.id;
+      const requester = req.decoded.email;
+      const requesterAccount = await userCollection.findOne({
+        email: requester,
+      });
+      if (requesterAccount.role === "admin") {
+        const filter = { email: email };
+        const updateDoc = {
+          $set: {
+            role: "admin",
+          },
+        };
+        const result = await userCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      } else {
+        res.status(403).send({ messages: "unAuthorization access" });
+      }
     });
 
     // -------------------UpdateProfile____________
@@ -159,7 +198,6 @@ async function run() {
       const service = req.body;
       const price = service.price;
       const amount = price * 100;
-      console.log(price);
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: "usd",
