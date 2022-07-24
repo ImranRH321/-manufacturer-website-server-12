@@ -112,6 +112,12 @@ async function run() {
       res.send(result);
     });
 
+    // __________________addProduct________________
+    app.post("/addProduct", async (req, res) => {
+      const result = await serviceCollection.insertOne(req.body);
+      res.send(result);
+    });
+
     // _____________Manage _Product_all___________
     app.get("/manage", jwtVaryFy, async (req, res) => {
       const result = await orderCollection.find().toArray();
