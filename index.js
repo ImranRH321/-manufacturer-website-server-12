@@ -60,7 +60,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/service/:id", async (req, res) => {
+    app.get("/service/:id", jwtVaryFy, async (req, res) => {
       const id = req.params.id;
       const result = await serviceCollection
         .find({ _id: ObjectId(id) })
@@ -81,7 +81,7 @@ async function run() {
     });
 
     // _______Ratting_Get________
-    app.get("/rating", async (req, res) => {
+    app.get("/rating", jwtVaryFy, async (req, res) => {
       const result = await ratingCollection.find({}).toArray();
       res.send(result);
     });
@@ -113,8 +113,16 @@ async function run() {
     });
 
     // _____________Manage _Product_all___________
-    app.get("/manage", async (req, res) => {
+    app.get("/manage", jwtVaryFy, async (req, res) => {
       const result = await orderCollection.find().toArray();
+      res.send(result);
+    });
+
+    //  __________________Manage_Deleted_single_product________
+    app.delete("/manage/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log("id", id);
+      const result = await orderCollection.deleteOne({ _id: ObjectId(id) });
       res.send(result);
     });
 
@@ -138,7 +146,7 @@ async function run() {
     });
 
     // _____admin_email____
-    app.get("/admin/:email", async (req, res) => {
+    app.get("/admin/:email", jwtVaryFy, async (req, res) => {
       const email = req.params.email;
       const user = await userCollection.findOne({ email: email });
       const isAdmin = user.role === "admin";
@@ -191,14 +199,14 @@ async function run() {
       res.send(result);
     });
     //  __myProfileGet__
-    app.get("/myProfile/:email", async (req, res) => {
+    app.get("/myProfile/:email", jwtVaryFy, async (req, res) => {
       const email = req.params.email;
       const result = await myProfileCollection.findOne({ email: email });
       res.send(result);
     });
 
     //   _________Orders_id_________
-    app.get("/order/:id", async (req, res) => {
+    app.get("/order/:id", jwtVaryFy, async (req, res) => {
       const id = req.params.id;
       const result = await orderCollection.findOne({ _id: ObjectId(id) });
       res.send(result);
