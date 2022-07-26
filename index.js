@@ -88,6 +88,7 @@ async function run() {
 
     //   _________Orders_Collection_POST_________
     app.post("/order", async (req, res) => {
+      console.log('----->', req.body);
       const result = await orderCollection.insertOne(req.body);
       res.send(result);
     });
@@ -119,7 +120,7 @@ async function run() {
     });
 
     // _____________AllProduct___________
-    app.get("/allProducts", async (req, res) => {
+    app.get("/allProducts", jwtVaryFy, async (req, res) => {
       const result = await serviceCollection.find().toArray();
       res.send(result);
     });
@@ -127,7 +128,6 @@ async function run() {
     //   _________AllProduct_Deleted_id_________
     app.delete("/allProduct/:id", async (req, res) => {
       const id = req.params.id;
-      console.log("id", id);
       const result = await serviceCollection.deleteOne({ _id: ObjectId(id) });
       console.log(result);
       res.send(result);
@@ -178,7 +178,6 @@ async function run() {
     app.delete("/admin/:email", async (req, res) => {
       const email = req.params.email;
       const result = await userCollection.deleteOne({ email: email });
-      console.log("result", result);
       res.send(result);
     });
 
@@ -201,6 +200,21 @@ async function run() {
       } else {
         res.status(403).send({ messages: "unAuthorization access" });
       }
+    });
+// ==============================today===============================
+    // ------------------Payment_confirm_pending---------------
+    app.put("/paymentConfirm/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          status: "shipped",
+        },
+      };
+      const result = await orderCollection.updateOne(filter, updateDoc, options);
+      console.log('result', result);
+      res.send(result);
     });
 
     // -------------------UpdateProfile____________
@@ -247,7 +261,10 @@ async function run() {
         clientSecret: paymentIntent.client_secret,
       });
     });
-
+ /* 
+ .
+ 
+ */
     // _________________patch_______________
     app.patch("/payment/:id", async (req, res) => {
       const id = req.params.id;
@@ -256,6 +273,7 @@ async function run() {
       const updateDoc = {
         $set: {
           paid: true,
+          status: 'pending',
           transactionId: payment.transactionId,
         },
       };
