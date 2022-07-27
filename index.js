@@ -88,7 +88,7 @@ async function run() {
 
     //   _________Orders_Collection_POST_________
     app.post("/order", async (req, res) => {
-      console.log('----->', req.body);
+      console.log("----->", req.body);
       const result = await orderCollection.insertOne(req.body);
       res.send(result);
     });
@@ -201,19 +201,19 @@ async function run() {
         res.status(403).send({ messages: "unAuthorization access" });
       }
     });
-// ==============================today===============================
+    // ==============================today===============================
     // ------------------Payment_confirm_pending---------------
-    app.put("/paymentConfirm/:id", async (req, res) => {
+    app.patch("/paymentConfirm/:id", async (req, res) => {
       const id = req.params.id;
+      console.log(id);
+      const statusText = req.body.statusText;
       const filter = { _id: ObjectId(id) };
-      const options = { upsert: true };
       const updateDoc = {
         $set: {
-          status: "shipped",
+          status: statusText,
         },
       };
-      const result = await orderCollection.updateOne(filter, updateDoc, options);
-      console.log('result', result);
+      const result = await orderCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
@@ -261,7 +261,7 @@ async function run() {
         clientSecret: paymentIntent.client_secret,
       });
     });
- /* 
+    /* 
  .
  
  */
@@ -273,7 +273,7 @@ async function run() {
       const updateDoc = {
         $set: {
           paid: true,
-          status: 'pending',
+          status: "pending",
           transactionId: payment.transactionId,
         },
       };
