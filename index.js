@@ -23,7 +23,6 @@ const client = new MongoClient(uri, {
 // ============================Jwt================================
 const jwtVaryFy = (req, res, next) => {
   const autHeader = req.headers.authorization;
-  // console.log("authHeader--->", autHeader);
   if (!autHeader) {
     return res.status(403).send({ messages: "unAuthorization access" });
   }
@@ -41,17 +40,11 @@ const jwtVaryFy = (req, res, next) => {
 async function run() {
   try {
     client.connect();
-    const serviceCollection = client
-      .db("Car_ware_Tools")
-      .collection("services");
+    const serviceCollection = client.db("Car_ware_Tools").collection("services");
     const orderCollection = client.db("Car_ware_Tools").collection("orders");
     const userCollection = client.db("Car_ware_Tools").collection("users");
-    const paymentCollection = client
-      .db("Car_ware_Tools")
-      .collection("payments");
-    const myProfileCollection = client
-      .db("Car_ware_Tools")
-      .collection("myProfile");
+    const paymentCollection = client.db("Car_ware_Tools").collection("payments");
+    const myProfileCollection = client.db("Car_ware_Tools").collection("myProfile");
     const ratingCollection = client.db("Car_ware_Tools").collection("rating");
 
     //   _________Services_Collection_________
@@ -113,7 +106,7 @@ async function run() {
       res.send(result);
     });
 
-    // __________________addProduct________________
+    // ______________addProduct________________
     app.post("/addProduct", jwtVaryFy, async (req, res) => {
       const result = await serviceCollection.insertOne(req.body);
       res.send(result);
@@ -133,13 +126,13 @@ async function run() {
       res.send(result);
     });
 
-    // _____________Manage _Product_all___________
+    // __________Manage _Product_all__________
     app.get("/manage", jwtVaryFy, async (req, res) => {
       const result = await orderCollection.find().toArray();
       res.send(result);
     });
 
-    //  __________________Manage_Deleted_single_product________
+    //  ___Manage_Deleted_single_product________
     app.delete("/manage/:id", async (req, res) => {
       const id = req.params.id;
       console.log("id", id);
@@ -147,7 +140,7 @@ async function run() {
       res.send(result);
     });
 
-    //  ____userCollection___Put__
+    //  ______userCollection______
     app.put("/user", async (req, res) => {
       const email = req.query.email;
       const user = req.body;
@@ -157,7 +150,6 @@ async function run() {
         $set: user,
       };
       const result = await userCollection.updateOne(filter, updateDoc, options);
-      /* token generate */
       const token = jwt.sign(
         { email: email },
         process.env.ACCESS_TOKEN_SECRET,
@@ -166,7 +158,7 @@ async function run() {
       res.send({ result, token });
     });
 
-    // _____admin_email____
+    // _____________admin_email_____________
     app.get("/admin/:email", jwtVaryFy, async (req, res) => {
       const email = req.params.email;
       const user = await userCollection.findOne({ email: email });
@@ -201,8 +193,8 @@ async function run() {
         res.status(403).send({ messages: "unAuthorization access" });
       }
     });
-    // ==============================today===============================
-    // ------------------Payment_confirm_pending---------------
+
+    // --------Payment_confirm_pending-----------
     app.patch("/paymentConfirm/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
@@ -217,7 +209,7 @@ async function run() {
       res.send(result);
     });
 
-    // -------------------UpdateProfile____________
+    // ------------UpdateProfile____________
     app.put("/myProfile", async (req, res) => {
       const email = req.query.email;
       const user = req.body;
@@ -240,14 +232,14 @@ async function run() {
       res.send(result);
     });
 
-    //   _________Orders_id_________
+    //   _______Orders_id______
     app.get("/order/:id", jwtVaryFy, async (req, res) => {
       const id = req.params.id;
       const result = await orderCollection.findOne({ _id: ObjectId(id) });
       res.send(result);
     });
 
-    // _____________Payment__________
+    // _________Payment__________
     app.post("/create-payment-intent", async (req, res) => {
       const service = req.body;
       const price = service.price;
@@ -261,11 +253,8 @@ async function run() {
         clientSecret: paymentIntent.client_secret,
       });
     });
-    /* 
- .
- 
- */
-    // _________________patch_______________
+
+    // ______________patch_______________
     app.patch("/payment/:id", async (req, res) => {
       const id = req.params.id;
       const payment = req.body;
@@ -286,7 +275,7 @@ async function run() {
   }
 }
 run().catch(console.dir);
-/* -------------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------- */
 app.get("/", (req, res) => {
   res.send("Project is running");
 });
